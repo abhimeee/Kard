@@ -1,4 +1,5 @@
 import type { ContactProfile } from "@/lib/profile";
+import { formatLinkLine } from "@/lib/link-handles";
 
 function linkHref(url: string): string {
   const u = url.trim();
@@ -57,7 +58,7 @@ export function ContactCard({
                     {l.label}
                   </span>
                   <span className="truncate text-right text-sm text-muted-foreground group-hover:text-foreground">
-                    {l.url.replace(/^https?:\/\//i, "")}
+                    {formatLinkLine(l.label, l.url)}
                   </span>
                 </a>
               </li>

@@ -6,6 +6,12 @@ import {
   type ContactLink,
   type ContactProfile,
 } from "@/lib/profile";
+import {
+  OTHER_LABEL,
+  buildUrlFromLabel,
+  displayValueForLink,
+  isHandleLinkRow,
+} from "@/lib/link-handles";
 
 export function ContactEditor({
   value,
@@ -38,10 +44,10 @@ export function ContactEditor({
     });
   };
 
-  const addBlank = () => {
+  const addOther = () => {
     update({
       ...value,
-      links: [...value.links, { label: "Link", url: "" }],
+      links: [...value.links, { label: OTHER_LABEL, url: "" }],
     });
   };
 
@@ -78,18 +84,12 @@ export function ContactEditor({
       </div>
 
       <div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-            Links
-          </span>
-          <button
-            type="button"
-            onClick={addBlank}
-            className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:border-accent/40 hover:text-accent"
-          >
-            + Custom
-          </button>
-        </div>
+        <span className="block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+          Add your profiles
+        </span>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Pick a platform and enter your handle or number — no links to copy.
+        </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {LINK_PRESETS.map((p) => (
             <button
@@ -101,11 +101,65 @@ export function ContactEditor({
               + {p.label}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={addOther}
+            className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:border-accent/40 hover:text-accent"
+          >
+            + Other
+          </button>
         </div>
 
-        <ul className="mt-4 space-y-3">
+        <ul className="mt-4 space-y-4">
           {value.links.map((link, i) => {
             const preset = LINK_PRESETS.find((p) => p.label === link.label);
+            const handleMode = isHandleLinkRow(link.label);
+
+            if (handleMode) {
+              const hint =
+                preset?.hint ??
+                (link.label === OTHER_LABEL
+                  ? "Paste a full URL, email, or domain."
+                  : "");
+
+              return (
+                <li
+                  key={i}
+                  className="rounded-xl border border-border bg-muted p-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-accent">
+                      {link.label}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeLink(i)}
+                      className="shrink-0 rounded-lg px-2 py-1 text-xs text-muted-foreground hover:text-destructive"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <input
+                    value={displayValueForLink(link.label, link.url)}
+                    onChange={(e) =>
+                      setLink(i, {
+                        url: buildUrlFromLabel(link.label, e.target.value),
+                      })
+                    }
+                    placeholder={preset?.placeholder ?? "https://…"}
+                    className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/15"
+                    aria-label={`${link.label} handle or number`}
+                    autoComplete="off"
+                  />
+                  {hint ? (
+                    <p className="mt-1.5 text-xs leading-snug text-muted-foreground">
+                      {hint}
+                    </p>
+                  ) : null}
+                </li>
+              );
+            }
+
             return (
               <li
                 key={i}
@@ -120,7 +174,7 @@ export function ContactEditor({
                 <input
                   value={link.url}
                   onChange={(e) => setLink(i, { url: e.target.value })}
-                  placeholder={preset?.placeholder ?? "https://"}
+                  placeholder="https://"
                   className="min-w-0 flex-1 rounded-lg border border-transparent bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70"
                   aria-label="URL"
                 />

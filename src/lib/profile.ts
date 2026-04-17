@@ -13,13 +13,41 @@ export type ContactProfile = {
   links: ContactLink[];
 };
 
-export const LINK_PRESETS: { label: string; placeholder: string }[] = [
-  { label: "X", placeholder: "https://x.com/yourhandle" },
-  { label: "LinkedIn", placeholder: "https://linkedin.com/in/you" },
-  { label: "WhatsApp", placeholder: "https://wa.me/15551234567" },
-  { label: "Email", placeholder: "mailto:you@example.com" },
-  { label: "GitHub", placeholder: "https://github.com/you" },
-  { label: "Website", placeholder: "https://yoursite.com" },
+export const LINK_PRESETS: {
+  label: string;
+  hint: string;
+  placeholder: string;
+}[] = [
+  {
+    label: "X",
+    hint: "Your handle — no need to paste a link.",
+    placeholder: "yourname",
+  },
+  {
+    label: "LinkedIn",
+    hint: "The part after linkedin.com/in/",
+    placeholder: "yourname",
+  },
+  {
+    label: "WhatsApp",
+    hint: "Your number with country code (spaces ok).",
+    placeholder: "1 555 123 4567",
+  },
+  {
+    label: "Email",
+    hint: "Your email address.",
+    placeholder: "you@example.com",
+  },
+  {
+    label: "GitHub",
+    hint: "Username only.",
+    placeholder: "yourname",
+  },
+  {
+    label: "Website",
+    hint: "Domain or site path.",
+    placeholder: "yoursite.com",
+  },
 ];
 
 export function emptyProfile(): ContactProfile {

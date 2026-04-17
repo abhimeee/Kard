@@ -35,7 +35,7 @@ export function HomeClient() {
         </h1>
         <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
           Fill in your links once, show a QR on your lock screen. They scan
-          with the camera — no app, no typos. Anyone can make a Kard; nothing
+          with the camera, no app, no typos. Anyone can make a Kard; nothing
           to install.
         </p>
       </header>
