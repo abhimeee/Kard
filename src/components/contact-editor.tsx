@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  type DragEvent,
+  type MutableRefObject,
+} from "react";
 import {
   LINK_PRESETS,
   type ContactLink,
@@ -13,6 +19,65 @@ import {
   isHandleLinkRow,
 } from "@/lib/link-handles";
 
+function reorderLinks(
+  links: ContactLink[],
+  from: number,
+  to: number,
+): ContactLink[] {
+  if (from === to) return links;
+  const next = [...links];
+  const [row] = next.splice(from, 1);
+  next.splice(to, 0, row);
+  return next;
+}
+
+function DragHandle({
+  label,
+  index,
+  dragFromRef,
+  onDragEnd,
+}: {
+  label: string;
+  index: number;
+  dragFromRef: MutableRefObject<number | null>;
+  onDragEnd: () => void;
+}) {
+  return (
+    <div
+      draggable
+      onDragStart={(e) => {
+        dragFromRef.current = index;
+        e.dataTransfer.effectAllowed = "move";
+        try {
+          e.dataTransfer.setData("text/plain", String(index));
+        } catch {
+          /* ignore */
+        }
+      }}
+      onDragEnd={() => {
+        dragFromRef.current = null;
+        onDragEnd();
+      }}
+      className="mt-0.5 flex shrink-0 cursor-grab select-none flex-col items-center justify-center gap-0.5 rounded-lg border border-transparent px-1 py-2 text-muted-foreground hover:border-border hover:text-foreground active:cursor-grabbing"
+      aria-label={`Reorder ${label}`}
+      title="Drag to reorder"
+    >
+      <div className="flex gap-0.5" aria-hidden>
+        <div className="flex flex-col gap-0.5">
+          <span className="h-1 w-1 rounded-full bg-current" />
+          <span className="h-1 w-1 rounded-full bg-current" />
+          <span className="h-1 w-1 rounded-full bg-current" />
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="h-1 w-1 rounded-full bg-current" />
+          <span className="h-1 w-1 rounded-full bg-current" />
+          <span className="h-1 w-1 rounded-full bg-current" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ContactEditor({
   value,
   onChange,
@@ -20,6 +85,9 @@ export function ContactEditor({
   value: ContactProfile;
   onChange: (p: ContactProfile) => void;
 }) {
+  const dragFrom = useRef<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<number | null>(null);
+
   const update = useCallback(
     (next: ContactProfile) => {
       onChange(next);
@@ -58,6 +126,23 @@ export function ContactEditor({
     });
   };
 
+  const onDragOverRow = (e: DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDropTarget(index);
+  };
+
+  const onDropRow = (e: DragEvent, index: number) => {
+    e.preventDefault();
+    setDropTarget(null);
+    const from = dragFrom.current;
+    dragFrom.current = null;
+    if (from === null || from === index) return;
+    update({ ...value, links: reorderLinks(value.links, from, index) });
+  };
+
+  const clearDropTarget = () => setDropTarget(null);
+
   return (
     <div className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-[0_1px_3px_rgba(28,25,23,0.04)] sm:p-8">
       <div>
@@ -89,6 +174,7 @@ export function ContactEditor({
         </span>
         <p className="mt-1 text-sm text-muted-foreground">
           Pick a platform and enter your handle or number — no links to copy.
+          Drag the grip to reorder how links appear on your Kard.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {LINK_PRESETS.map((p) => (
@@ -125,37 +211,50 @@ export function ContactEditor({
               return (
                 <li
                   key={i}
-                  className="rounded-xl border border-border bg-muted p-4"
+                  className={`flex gap-3 rounded-xl border border-border bg-muted p-4 transition-shadow ${
+                    dropTarget === i ? "ring-2 ring-accent/25" : ""
+                  }`}
+                  onDragOver={(e) => onDragOverRow(e, i)}
+                  onDrop={(e) => onDropRow(e, i)}
+                  onDragLeave={clearDropTarget}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-accent">
-                      {link.label}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeLink(i)}
-                      className="shrink-0 rounded-lg px-2 py-1 text-xs text-muted-foreground hover:text-destructive"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                  <input
-                    value={displayValueForLink(link.label, link.url)}
-                    onChange={(e) =>
-                      setLink(i, {
-                        url: buildUrlFromLabel(link.label, e.target.value),
-                      })
-                    }
-                    placeholder={preset?.placeholder ?? "https://…"}
-                    className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/15"
-                    aria-label={`${link.label} handle or number`}
-                    autoComplete="off"
+                  <DragHandle
+                    label={link.label}
+                    index={i}
+                    dragFromRef={dragFrom}
+                    onDragEnd={clearDropTarget}
                   />
-                  {hint ? (
-                    <p className="mt-1.5 text-xs leading-snug text-muted-foreground">
-                      {hint}
-                    </p>
-                  ) : null}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-accent">
+                        {link.label}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeLink(i)}
+                        className="shrink-0 rounded-lg px-2 py-1 text-xs text-muted-foreground hover:text-destructive"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <input
+                      value={displayValueForLink(link.label, link.url)}
+                      onChange={(e) =>
+                        setLink(i, {
+                          url: buildUrlFromLabel(link.label, e.target.value),
+                        })
+                      }
+                      placeholder={preset?.placeholder ?? "https://…"}
+                      className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/15"
+                      aria-label={`${link.label} handle or number`}
+                      autoComplete="off"
+                    />
+                    {hint ? (
+                      <p className="mt-1.5 text-xs leading-snug text-muted-foreground">
+                        {hint}
+                      </p>
+                    ) : null}
+                  </div>
                 </li>
               );
             }
@@ -163,28 +262,41 @@ export function ContactEditor({
             return (
               <li
                 key={i}
-                className="flex flex-col gap-2 rounded-xl border border-border bg-muted p-3 sm:flex-row sm:items-center"
+                className={`flex gap-2 rounded-xl border border-border bg-muted p-3 transition-shadow ${
+                  dropTarget === i ? "ring-2 ring-accent/25" : ""
+                }`}
+                onDragOver={(e) => onDragOverRow(e, i)}
+                onDrop={(e) => onDropRow(e, i)}
+                onDragLeave={clearDropTarget}
               >
-                <input
-                  value={link.label}
-                  onChange={(e) => setLink(i, { label: e.target.value })}
-                  className="w-full shrink-0 rounded-lg border border-transparent bg-card px-3 py-2 text-sm text-foreground sm:max-w-[140px]"
-                  aria-label="Link label"
+                <DragHandle
+                  label={link.label || "link"}
+                  index={i}
+                  dragFromRef={dragFrom}
+                  onDragEnd={clearDropTarget}
                 />
-                <input
-                  value={link.url}
-                  onChange={(e) => setLink(i, { url: e.target.value })}
-                  placeholder="https://"
-                  className="min-w-0 flex-1 rounded-lg border border-transparent bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70"
-                  aria-label="URL"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeLink(i)}
-                  className="shrink-0 rounded-lg px-2 py-2 text-xs text-muted-foreground hover:text-destructive"
-                >
-                  Remove
-                </button>
+                <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                  <input
+                    value={link.label}
+                    onChange={(e) => setLink(i, { label: e.target.value })}
+                    className="w-full shrink-0 rounded-lg border border-transparent bg-card px-3 py-2 text-sm text-foreground sm:max-w-[140px]"
+                    aria-label="Link label"
+                  />
+                  <input
+                    value={link.url}
+                    onChange={(e) => setLink(i, { url: e.target.value })}
+                    placeholder="https://"
+                    className="min-w-0 flex-1 rounded-lg border border-transparent bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70"
+                    aria-label="URL"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeLink(i)}
+                    className="shrink-0 rounded-lg px-2 py-2 text-xs text-muted-foreground hover:text-destructive"
+                  >
+                    Remove
+                  </button>
+                </div>
               </li>
             );
           })}

@@ -15,6 +15,59 @@
   --destructive-foreground: #9a3412;
   --destructive-bg: #fff7ed;
   --destructive-border: #fed7aa;
+  --glow-accent: rgba(13, 148, 136, 0.09);
+  --glow-neutral: rgba(120, 113, 108, 0.07);
+  --noise-opacity: 0.04;
+}
+
+html.dark {
+  --background: #141211;
+  --foreground: #fafaf9;
+  --muted: #1f1d1b;
+  --muted-foreground: #a8a29e;
+  --accent: #2dd4bf;
+  --accent-foreground: #042f2e;
+  --accent-hover: #5eead4;
+  --border: #292524;
+  --card: #1c1917;
+  --input: #292524;
+  --destructive: #fb923c;
+  --destructive-foreground: #ffedd5;
+  --destructive-bg: #431407;
+  --destructive-border: #9a3412;
+  --glow-accent: rgba(45, 212, 191, 0.12);
+  --glow-neutral: rgba(168, 162, 158, 0.08);
+  --noise-opacity: 0.035;
+}
+
+@keyframes kard-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes kard-link-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.kard-card-animate {
+  animation: kard-card-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.kard-link-animate {
+  animation: kard-link-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @theme inline {

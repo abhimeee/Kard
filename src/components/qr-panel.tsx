@@ -28,6 +28,9 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
     null,
   );
   const [copied, setCopied] = useState(false);
+  const [canNativeShare] = useState(
+    () => typeof navigator !== "undefined" && !!navigator.share,
+  );
 
   const build: Build = useMemo(() => {
     const nameOk = profile.name.trim().length > 0;
@@ -104,6 +107,24 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
     }
   };
 
+  const shareLink = async () => {
+    if (!fullUrl || !canNativeShare) return;
+    const title = profile.name.trim()
+      ? `${profile.name.trim()}'s Kard`
+      : "My Kard";
+    try {
+      await navigator.share({
+        title,
+        text: "Here’s my contact card — open the link.",
+        url: fullUrl,
+      });
+    } catch (err) {
+      const name = err instanceof DOMException ? err.name : "";
+      if (name === "AbortError") return;
+      await copyLink();
+    }
+  };
+
   const downloadPng = () => {
     if (!displayUrl) return;
     const a = document.createElement("a");
@@ -153,12 +174,26 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
           )}
         </div>
 
-        <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row">
+        <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row sm:flex-wrap">
+          {canNativeShare ? (
+            <button
+              type="button"
+              onClick={shareLink}
+              disabled={!fullUrl}
+              className="flex-1 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-[140px]"
+            >
+              Share…
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={copyLink}
             disabled={!fullUrl}
-            className="flex-1 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+            className={`flex-1 rounded-full px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-[140px] ${
+              canNativeShare
+                ? "border border-border bg-card font-medium text-foreground hover:border-accent/40"
+                : "bg-accent text-accent-foreground hover:bg-accent-hover"
+            }`}
           >
             {copied ? "Copied" : "Copy link"}
           </button>
@@ -166,7 +201,7 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
             type="button"
             onClick={downloadPng}
             disabled={!displayUrl}
-            className="flex-1 rounded-full border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:border-accent/40 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex-1 rounded-full border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:border-accent/40 disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-[140px]"
           >
             Download PNG
           </button>

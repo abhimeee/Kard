@@ -53,7 +53,7 @@ export function HomeClient() {
               This is what people see after scanning.
             </p>
             <div className="mt-4">
-              <ContactCard profile={profile} />
+              <ContactCard profile={profile} animate />
             </div>
           </div>
           <QrPanel profile={profile} />
