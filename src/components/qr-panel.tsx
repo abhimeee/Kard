@@ -28,6 +28,8 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
     null,
   );
   const [copied, setCopied] = useState(false);
+  const [shortUrl, setShortUrl] = useState<string | null>(null);
+  const [shortLoading, setShortLoading] = useState(false);
   const [canNativeShare] = useState(
     () => typeof navigator !== "undefined" && !!navigator.share,
   );
@@ -71,13 +73,63 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
 
   const encoded = build.ok ? build.encoded : "";
   const cardUrl = build.ok ? build.fullUrl : "";
+  const linkUrl = build.ok ? (shortUrl ?? cardUrl) : "";
 
   useEffect(() => {
-    if (!encoded || !cardUrl) return;
+    if (!build.ok || !encoded) {
+      let gone = false;
+      queueMicrotask(() => {
+        if (!gone) {
+          setShortUrl(null);
+          setShortLoading(false);
+        }
+      });
+      return () => {
+        gone = true;
+      };
+    }
+
+    let cancelled = false;
+    const ac = new AbortController();
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setShortLoading(true);
+        setShortUrl(null);
+      }
+    });
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await fetch("/api/shorten", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ encoded }),
+          signal: ac.signal,
+        });
+        const data = (await res.json()) as { shortUrl?: string };
+        if (cancelled) return;
+        if (res.ok && data.shortUrl) setShortUrl(data.shortUrl);
+      } catch (e) {
+        if (cancelled || (e as Error).name === "AbortError") return;
+      } finally {
+        if (!cancelled) setShortLoading(false);
+      }
+    }, 450);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      ac.abort();
+      setShortLoading(false);
+    };
+  }, [encoded, build.ok]);
+
+  useEffect(() => {
+    if (!encoded || !linkUrl) return;
 
     let cancelled = false;
 
-    QRCode.toDataURL(cardUrl, {
+    QRCode.toDataURL(linkUrl, {
       width: 520,
       margin: 2,
       errorCorrectionLevel: "M",
@@ -89,7 +141,7 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
     return () => {
       cancelled = true;
     };
-  }, [encoded, cardUrl]);
+  }, [encoded, linkUrl]);
 
   const displayUrl =
     build.ok && qr?.encoded === build.encoded ? qr.dataUrl : null;
@@ -97,9 +149,9 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
   const error = build.error;
 
   const copyLink = async () => {
-    if (!fullUrl) return;
+    if (!linkUrl) return;
     try {
-      await navigator.clipboard.writeText(fullUrl);
+      await navigator.clipboard.writeText(linkUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -108,7 +160,7 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
   };
 
   const shareLink = async () => {
-    if (!fullUrl || !canNativeShare) return;
+    if (!linkUrl || !canNativeShare) return;
     const title = profile.name.trim()
       ? `${profile.name.trim()}'s Kard`
       : "My Kard";
@@ -116,7 +168,7 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
       await navigator.share({
         title,
         text: "Here’s my contact card — open the link.",
-        url: fullUrl,
+        url: linkUrl,
       });
     } catch (err) {
       const name = err instanceof DOMException ? err.name : "";
@@ -143,7 +195,8 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         Save the image to your camera roll and set it as your lock-screen wallpaper
-        — one scan, no typing.
+        — one scan, no typing. The QR uses a short link when ready so it encodes
+        cleanly and is easier to share.
       </p>
 
       {error ? (
@@ -179,7 +232,7 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
             <button
               type="button"
               onClick={shareLink}
-              disabled={!fullUrl}
+              disabled={!linkUrl}
               className="flex-1 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-[140px]"
             >
               Share…
@@ -188,7 +241,7 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
           <button
             type="button"
             onClick={copyLink}
-            disabled={!fullUrl}
+            disabled={!linkUrl}
             className={`flex-1 rounded-full px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-[140px] ${
               canNativeShare
                 ? "border border-border bg-card font-medium text-foreground hover:border-accent/40"
@@ -206,6 +259,38 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
             Download PNG
           </button>
         </div>
+
+        {build.ok && linkUrl ? (
+          <div className="w-full max-w-md space-y-1 text-center">
+            {shortLoading && !shortUrl ? (
+              <p className="text-xs text-muted-foreground">
+                Preparing short link for a smaller QR…
+              </p>
+            ) : null}
+            <p className="break-all text-xs text-muted-foreground">
+              <span className="font-medium text-foreground/80">
+                {shortUrl ? "Short link" : "Link"}
+              </span>
+              {": "}
+              <span className="font-mono text-[0.7rem] sm:text-xs">{linkUrl}</span>
+            </p>
+            {shortUrl ? (
+              <p className="text-[0.65rem] leading-snug text-muted-foreground/90">
+                Full data link still works if you need it —{" "}
+                <button
+                  type="button"
+                  className="text-accent underline-offset-2 hover:underline"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(fullUrl);
+                  }}
+                >
+                  copy full link
+                </button>
+                .
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );
