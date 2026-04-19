@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ContactCard } from "@/components/contact-card";
+import { SaveKardPanel } from "@/components/save-kard-panel";
 import { decodeProfile } from "@/lib/codec";
 import type { ContactProfile } from "@/lib/profile";
 
@@ -16,6 +17,7 @@ function readPayload(): string {
 
 export function CardView() {
   const [profile, setProfile] = useState<ContactProfile | null>(null);
+  const [encodedPayload, setEncodedPayload] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,6 +25,7 @@ export function CardView() {
     function apply() {
       const raw = readPayload();
       if (!raw) {
+        setEncodedPayload("");
         setError(
           "Missing card data. Open a full Kard link from a QR or shared URL.",
         );
@@ -32,6 +35,7 @@ export function CardView() {
       }
       const decoded = decodeProfile(raw);
       if (!decoded) {
+        setEncodedPayload("");
         setError(
           "This link is invalid or corrupted. Ask for a fresh QR or link.",
         );
@@ -39,6 +43,7 @@ export function CardView() {
         setLoading(false);
         return;
       }
+      setEncodedPayload(raw);
       setError(null);
       setProfile(decoded);
       setLoading(false);
@@ -79,6 +84,9 @@ export function CardView() {
   return (
     <div className="mx-auto w-full max-w-md px-4 py-12 sm:py-16">
       <ContactCard profile={profile} variant="share" />
+      {encodedPayload ? (
+        <SaveKardPanel encoded={encodedPayload} profile={profile} />
+      ) : null}
       <p className="mt-10 text-center text-sm text-muted-foreground">
         Want your own?{" "}
         <Link
@@ -86,6 +94,13 @@ export function CardView() {
           className="text-accent underline-offset-4 hover:text-accent-hover hover:underline"
         >
           Make a Kard
+        </Link>
+        {" · "}
+        <Link
+          href="/saved"
+          className="text-accent underline-offset-4 hover:text-accent-hover hover:underline"
+        >
+          Saved Kards
         </Link>
       </p>
     </div>

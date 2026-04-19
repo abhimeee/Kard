@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import Link from "next/link";
 import { ContactEditor } from "@/components/contact-editor";
 import { ContactCard } from "@/components/contact-card";
 import { QrPanel } from "@/components/qr-panel";
@@ -37,6 +38,18 @@ export function HomeClient() {
           Fill in your links once, show a QR on your lock screen. They scan
           with the camera, no app, no typos. Anyone can make a Kard; nothing
           to install.
+        </p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          <Link
+            href="/saved"
+            className="font-medium text-accent underline-offset-4 hover:text-accent-hover hover:underline"
+          >
+            Saved Kards
+          </Link>
+          <span className="text-muted-foreground/80">
+            {" "}
+            — Kards you scanned on this device, with notes.
+          </span>
         </p>
       </header>
 

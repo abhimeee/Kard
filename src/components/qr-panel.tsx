@@ -30,9 +30,12 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
   const [copied, setCopied] = useState(false);
   const [shortUrl, setShortUrl] = useState<string | null>(null);
   const [shortLoading, setShortLoading] = useState(false);
-  const [canNativeShare] = useState(
-    () => typeof navigator !== "undefined" && !!navigator.share,
-  );
+  /** false on server + first paint so markup matches hydration; set in useEffect. */
+  const [canNativeShare, setCanNativeShare] = useState(false);
+
+  useEffect(() => {
+    setCanNativeShare(typeof navigator !== "undefined" && !!navigator.share);
+  }, []);
 
   const build: Build = useMemo(() => {
     const nameOk = profile.name.trim().length > 0;
