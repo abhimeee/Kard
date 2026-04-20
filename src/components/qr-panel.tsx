@@ -192,7 +192,7 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
     !profile.name.trim() || !profile.links.some((l) => l.url.trim());
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_1px_3px_rgba(28,25,23,0.04)] sm:p-8">
+    <div className="kard-animate-in kard-delay-5 rounded-2xl border border-border bg-card p-6 shadow-[0_1px_3px_rgba(28,25,23,0.04)] sm:p-8">
       <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold text-foreground">
         Your QR
       </h2>
@@ -209,7 +209,9 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
       ) : null}
 
       <div className="mt-6 flex flex-col items-center gap-6">
-        <div className="rounded-2xl bg-white p-4 shadow-inner ring-1 ring-border">
+        <div
+          className={`rounded-2xl bg-white p-4 shadow-inner ring-1 ring-border transition-[transform] duration-300 dark:bg-white ${displayUrl ? "kard-qr-frame-ready" : ""}`}
+        >
           {displayUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- data URL from qrcode
             <img
@@ -217,7 +219,7 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
               alt="QR code linking to your Kard"
               width={260}
               height={260}
-              className="h-[260px] w-[260px]"
+              className="kard-qr-reveal h-[260px] w-[260px]"
             />
           ) : (
             <div className="flex h-[260px] w-[260px] items-center justify-center bg-muted p-6 text-center text-sm text-muted-foreground">
@@ -236,7 +238,7 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
               type="button"
               onClick={shareLink}
               disabled={!linkUrl}
-              className="flex-1 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-[140px]"
+              className="flex-1 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition duration-200 hover:scale-[1.02] hover:bg-accent-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 sm:min-w-[140px]"
             >
               Share…
             </button>
@@ -245,19 +247,19 @@ export function QrPanel({ profile }: { profile: ContactProfile }) {
             type="button"
             onClick={copyLink}
             disabled={!linkUrl}
-            className={`flex-1 rounded-full px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-[140px] ${
+            className={`flex-1 rounded-full px-5 py-3 text-sm font-semibold transition duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 sm:min-w-[140px] ${
               canNativeShare
                 ? "border border-border bg-card font-medium text-foreground hover:border-accent/40"
                 : "bg-accent text-accent-foreground hover:bg-accent-hover"
             }`}
           >
-            {copied ? "Copied" : "Copy link"}
+            {copied ? "Copied ✓" : "Copy link"}
           </button>
           <button
             type="button"
             onClick={downloadPng}
             disabled={!displayUrl}
-            className="flex-1 rounded-full border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:border-accent/40 disabled:cursor-not-allowed disabled:opacity-40 sm:min-w-[140px]"
+            className="flex-1 rounded-full border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition duration-200 hover:border-accent/40 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 sm:min-w-[140px]"
           >
             Download PNG
           </button>

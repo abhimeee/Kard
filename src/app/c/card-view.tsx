@@ -57,8 +57,11 @@ export function CardView() {
   if (loading) {
     return (
       <div className="mx-auto max-w-lg px-4 py-24 text-center">
-        <div className="mx-auto h-12 w-12 animate-pulse rounded-full bg-muted" />
-        <p className="mt-6 text-muted-foreground">Loading…</p>
+        <div
+          className="mx-auto h-14 w-14 animate-spin rounded-full border-2 border-accent/25 border-t-accent motion-reduce:animate-none"
+          aria-hidden
+        />
+        <p className="mt-6 text-muted-foreground">Opening Kard…</p>
       </div>
     );
   }
@@ -83,7 +86,7 @@ export function CardView() {
 
   return (
     <div className="mx-auto w-full max-w-md px-4 py-12 sm:py-16">
-      <ContactCard profile={profile} variant="share" />
+      <ContactCard profile={profile} variant="share" animate tilt />
       {encodedPayload ? (
         <SaveKardPanel encoded={encodedPayload} profile={profile} />
       ) : null}

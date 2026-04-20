@@ -144,7 +144,7 @@ export function ContactEditor({
   const clearDropTarget = () => setDropTarget(null);
 
   return (
-    <div className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-[0_1px_3px_rgba(28,25,23,0.04)] sm:p-8">
+    <div className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-[0_1px_3px_rgba(28,25,23,0.04)] transition-shadow duration-300 hover:shadow-[0_12px_40px_-16px_rgba(13,148,136,0.12)] dark:hover:shadow-[0_12px_48px_-16px_rgba(45,212,191,0.1)] sm:p-8">
       <div>
         <label className="block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           Name
@@ -182,7 +182,7 @@ export function ContactEditor({
               key={p.label}
               type="button"
               onClick={() => addPreset(p.label)}
-              className="rounded-full bg-muted px-3 py-1.5 text-xs text-accent ring-1 ring-border transition hover:ring-accent/30"
+              className="rounded-full bg-muted px-3 py-1.5 text-xs text-accent ring-1 ring-border transition duration-200 hover:scale-105 hover:ring-accent/40 active:scale-100"
             >
               + {p.label}
             </button>
@@ -190,7 +190,7 @@ export function ContactEditor({
           <button
             type="button"
             onClick={addOther}
-            className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:border-accent/40 hover:text-accent"
+            className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition duration-200 hover:scale-105 hover:border-accent/40 hover:text-accent active:scale-100"
           >
             + Other
           </button>

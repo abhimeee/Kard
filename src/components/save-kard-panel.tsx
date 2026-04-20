@@ -38,7 +38,7 @@ export function SaveKardPanel({
   };
 
   return (
-    <div className="mt-8 rounded-2xl border border-border bg-card/80 p-5 shadow-[0_1px_3px_rgba(28,25,23,0.04)] backdrop-blur-sm sm:p-6">
+    <div className="kard-animate-in kard-delay-2 mt-8 rounded-2xl border border-border bg-card/80 p-5 shadow-[0_1px_3px_rgba(28,25,23,0.04)] backdrop-blur-sm transition-shadow duration-300 hover:shadow-[0_16px_48px_-20px_rgba(13,148,136,0.15)] dark:hover:shadow-[0_16px_48px_-20px_rgba(45,212,191,0.12)] sm:p-6">
       <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
         Save on this device
       </h2>
@@ -60,7 +60,7 @@ export function SaveKardPanel({
         <button
           type="button"
           onClick={save}
-          className="rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-hover"
+          className="rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition duration-200 hover:scale-[1.02] hover:bg-accent-hover active:scale-[0.98]"
         >
           {saved ? "Update saved Kard" : "Save Kard"}
         </button>
