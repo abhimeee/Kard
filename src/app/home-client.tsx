@@ -49,7 +49,7 @@ export function HomeClient() {
           </Link>
           <span className="text-muted-foreground/80">
             {" "}
-            — Kards you scanned on this device, with notes.
+            Kards you scanned on this device, with notes.
           </span>
         </p>
       </header>
