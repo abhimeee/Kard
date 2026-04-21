@@ -10,6 +10,16 @@ export type SavedKardEntry = {
   profile: ContactProfile;
   note: string;
   savedAt: string;
+  /** Event / context where this person was met (from Event Mode or manual entry). */
+  event?: string;
+  /** User flagged this contact as needing a follow-up. */
+  followUp?: boolean;
+};
+
+export type UpsertOptions = {
+  note: string;
+  event?: string;
+  followUp?: boolean;
 };
 
 export type SavedKardExport = {
@@ -58,11 +68,18 @@ function parseList(raw: string | null): SavedKardEntry[] {
       if (typeof r.savedAt !== "string") continue;
       const profile = normalizeProfile(r.profile);
       if (!profile) continue;
+      const event =
+        typeof r.event === "string" && r.event.trim()
+          ? r.event.trim()
+          : undefined;
+      const followUp = r.followUp === true ? true : undefined;
       out.push({
         encoded: r.encoded.trim(),
         profile,
         note: r.note,
         savedAt: r.savedAt,
+        ...(event ? { event } : {}),
+        ...(followUp ? { followUp } : {}),
       });
     }
     return out;
@@ -101,26 +118,32 @@ export function getSavedKardNote(encoded: string): string {
 export function upsertSavedKard(
   encoded: string,
   profile: ContactProfile,
-  note: string,
+  opts: UpsertOptions,
 ): void {
   const e = encoded.trim();
   if (!e) return;
   const items = listSavedKards();
   const idx = items.findIndex((x) => x.encoded === e);
   const now = new Date().toISOString();
+  const event = opts.event?.trim() || undefined;
+  const followUp = opts.followUp === true ? true : undefined;
   if (idx >= 0) {
     items[idx] = {
       encoded: e,
       profile,
-      note: note.trim(),
+      note: opts.note.trim(),
       savedAt: items[idx]!.savedAt,
+      ...(event ? { event } : {}),
+      ...(followUp ? { followUp } : {}),
     };
   } else {
     items.unshift({
       encoded: e,
       profile,
-      note: note.trim(),
+      note: opts.note.trim(),
       savedAt: now,
+      ...(event ? { event } : {}),
+      ...(followUp ? { followUp } : {}),
     });
   }
   writeList(items);
@@ -133,6 +156,41 @@ export function updateSavedKardNote(encoded: string, note: string): void {
   if (idx < 0) return;
   items[idx] = { ...items[idx]!, note: note.trim() };
   writeList(items);
+}
+
+export function setSavedKardFollowUp(
+  encoded: string,
+  followUp: boolean,
+): void {
+  const e = encoded.trim();
+  const items = listSavedKards();
+  const idx = items.findIndex((x) => x.encoded === e);
+  if (idx < 0) return;
+  const current = items[idx]!;
+  const next: SavedKardEntry = { ...current };
+  if (followUp) next.followUp = true;
+  else delete next.followUp;
+  items[idx] = next;
+  writeList(items);
+}
+
+export function setSavedKardEvent(encoded: string, event: string): void {
+  const e = encoded.trim();
+  const items = listSavedKards();
+  const idx = items.findIndex((x) => x.encoded === e);
+  if (idx < 0) return;
+  const current = items[idx]!;
+  const trimmed = event.trim();
+  const next: SavedKardEntry = { ...current };
+  if (trimmed) next.event = trimmed;
+  else delete next.event;
+  items[idx] = next;
+  writeList(items);
+}
+
+export function getSavedKard(encoded: string): SavedKardEntry | undefined {
+  const e = encoded.trim();
+  return listSavedKards().find((x) => x.encoded === e);
 }
 
 export function removeSavedKard(encoded: string): void {

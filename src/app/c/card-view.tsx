@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ContactCard } from "@/components/contact-card";
 import { SaveKardPanel } from "@/components/save-kard-panel";
+import { EventModeBanner } from "@/components/event-mode-banner";
 import { decodeProfile } from "@/lib/codec";
 import type { ContactProfile } from "@/lib/profile";
 
@@ -88,7 +89,12 @@ export function CardView() {
     <div className="mx-auto w-full max-w-md px-4 py-12 sm:py-16">
       <ContactCard profile={profile} variant="share" animate tilt />
       {encodedPayload ? (
-        <SaveKardPanel encoded={encodedPayload} profile={profile} />
+        <>
+          <div className="mt-6">
+            <EventModeBanner variant="compact" />
+          </div>
+          <SaveKardPanel encoded={encodedPayload} profile={profile} />
+        </>
       ) : null}
       <p className="mt-10 text-center text-sm text-muted-foreground">
         Want your own?{" "}

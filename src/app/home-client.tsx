@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ContactEditor } from "@/components/contact-editor";
 import { ContactCard } from "@/components/contact-card";
 import { QrPanel } from "@/components/qr-panel";
+import { EventModeBanner } from "@/components/event-mode-banner";
 import {
   getProfileSnapshot,
   getServerProfileSnapshot,
@@ -53,7 +54,11 @@ export function HomeClient() {
         </p>
       </header>
 
-      <div className="mt-14 grid gap-10 lg:grid-cols-2 lg:gap-12">
+      <div className="mt-10">
+        <EventModeBanner />
+      </div>
+
+      <div className="mt-4 grid gap-10 lg:grid-cols-2 lg:gap-12">
         <div className="kard-animate-in kard-delay-3 space-y-6">
           <ContactEditor value={profile} onChange={setProfile} />
         </div>
